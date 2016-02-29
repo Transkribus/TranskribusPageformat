@@ -27,7 +27,6 @@
 	<complexType name="PageType">
 		<sequence>
 			<element name="Property" type="pc:PropertyType" minOccurs="0" maxOccurs="unbounded"/>
-			<element name="Tag" type="pc:TagType" minOccurs="0" maxOccurs="unbounded"/>
 			<element name="Link" type="pc:LinkType" minOccurs="0" maxOccurs="unbounded"/>
 			
 			<element name="AlternativeImage" type="pc:AlternativeImageType" minOccurs="0" maxOccurs="unbounded">
@@ -202,7 +201,6 @@ Range: -179.999,180</documentation>
 	<complexType name="TextLineType">
 		<sequence>
 			<element name="Property" type="pc:PropertyType" minOccurs="0" maxOccurs="unbounded"/>
-			<element name="Tag" type="pc:TagType" minOccurs="0" maxOccurs="unbounded"/>
 			<element name="Link" type="pc:LinkType" minOccurs="0" maxOccurs="unbounded"/>
 			<element name="Coords" type="pc:CoordsType" minOccurs="0"/>
 			<element name="Baseline" type="pc:BaselineType" minOccurs="0">
@@ -246,7 +244,6 @@ Range: -179.999,180</documentation>
 	<complexType name="WordType">
 		<sequence>
 			<element name="Property" type="pc:PropertyType" minOccurs="0" maxOccurs="unbounded"/>
-			<element name="Tag" type="pc:TagType" minOccurs="0" maxOccurs="unbounded"/>
 			<element name="Link" type="pc:LinkType" minOccurs="0" maxOccurs="unbounded"/>
 			<element name="Coords" type="pc:CoordsType"/>
 			<element name="Glyph" type="pc:GlyphType" minOccurs="0" maxOccurs="unbounded">
@@ -282,7 +279,6 @@ Range: -179.999,180</documentation>
 	<complexType name="GlyphType">
 		<sequence>
 			<element name="Property" type="pc:PropertyType" minOccurs="0" maxOccurs="unbounded"/>
-			<element name="Tag" type="pc:TagType" minOccurs="0" maxOccurs="unbounded"/>
 			<element name="Link" type="pc:LinkType" minOccurs="0" maxOccurs="unbounded"/>
 			<element name="Coords" type="pc:CoordsType"/>
 			<element name="TextEquiv" type="pc:TextEquivType" minOccurs="0" maxOccurs="1">
@@ -1335,7 +1331,6 @@ It does not contain pagenumber (if not part of running title), marginals, signat
     <complexType name="RegionType" abstract="true">
     	<sequence>
     		<element name="Property" type="pc:PropertyType" minOccurs="0" maxOccurs="unbounded"/>
-    		<element name="Tag" type="pc:TagType" minOccurs="0" maxOccurs="unbounded"/>
     		<element name="Link" type="pc:LinkType" minOccurs="0" maxOccurs="unbounded"/>
     		<element name="Coords" type="pc:CoordsType"/>
     		<choice minOccurs="0" maxOccurs="unbounded">
@@ -1386,11 +1381,22 @@ It does not contain pagenumber (if not part of running title), marginals, signat
 	<complexType name="PropertyType">
 		<annotation>
 			<documentation>
-				an attribute is a simple key/value pair storing information about the element its in
-				attributes inherited to their child element and can be ovveridden there 
-				the inheritance hierarchy is: Page -> Region -> TextLine -> Word -> Glyph
+				A property is a key/value pair storing information about the element it is in.
+				Attributes are inherited to their child element and can be ovveridden there. 
+				The inheritance hierarchy is: Page -> Region -> TextLine -> Word -> Glyph
 			</documentation>
 		</annotation>
+		
+		<sequence minOccurs="0" maxOccurs="unbounded">
+			<annotation>
+				<documentation>
+					Sub properties of this property. E.g. when specifying an attribute "abbrev" for tagging an abbreviation in the text,
+					a sub-property could be the property "expansion" for the expansion of the abbreviation.
+					Sub property nesting should not exceed child level one to prevent unnecessary complexity of the datastructure.
+				</documentation> 
+			</annotation>
+			<element name="Property" type="pc:PropertyType"></element>
+		</sequence>
 		
 		<attribute name="key"  type="pc:PropertyNameType" use="required">
 			<annotation>
@@ -1419,61 +1425,48 @@ It does not contain pagenumber (if not part of running title), marginals, signat
 					...
 				</documentation>
 			</annotation>
-		</attribute>   	
+		</attribute> 
+		
+		<attribute name="index" type="int">
+			<annotation>
+				<documentation>
+					If this property refers to some text in the corresponding element (i.e. in a TextRegion, TextLine or Word),
+					this attribute specifies the 0 based starting index of the referenced text
+				</documentation>
+			</annotation>
+		</attribute>
+		
+		<attribute name="offset" type="int">
+			<annotation>
+				<documentation>
+					If this property refers to some text in the corresponding element (i.e. in a TextRegion, TextLine or Word),
+					this attribute specifies the length of the referenced text
+				</documentation>
+			</annotation>
+		</attribute>
+		
+		<attribute name="continued" type="boolean">
+			<annotation>
+				<documentation>
+					If this property refers to some text in the corresponding element (i.e. in a TextRegion, TextLine or Word),
+					this attribute specifies if it is a continuation from the previous element
+				</documentation>
+			</annotation>
+		</attribute>
 	</complexType>
 	
 	<simpleType name="PropertyNameType">
+		<annotation>
+			<documentation>
+				Property names should be restricted to alphanumeric characters, underscores, dashes and dots.
+			</documentation>
+		</annotation>		
+		
 		<restriction base="string">
-			<pattern value="[a-zA-Z0-9_-]+"/>
+			<pattern value="[a-zA-Z0-9_.-]+"/>
 		</restriction>
 	</simpleType>
 
-	<complexType name="TagType">
-		<annotation>
-			<documentation>
-				tags are (mostly) text-based properties that can store additional information on the position of the text the tag occurs
-				they can also contain child properties
-			</documentation>
-		</annotation>
-		
-		<complexContent>
-			<extension base="pc:PropertyType">
-				<sequence minOccurs="0" maxOccurs="unbounded">
-					<annotation>
-						<documentation>
-							properties of the tag
-						</documentation> 
-					</annotation>
-					<element name="Property" type="pc:PropertyType"></element>
-				</sequence>
-				
-				<attribute name="index" type="int">
-					<annotation>
-						<documentation>
-							the 0 based index of the tag value in the text element
-						</documentation>
-					</annotation>
-				</attribute>
-				
-				<attribute name="offset" type="int">
-					<annotation>
-						<documentation>
-							the length of the tag value in the text element
-						</documentation>
-					</annotation>
-				</attribute>
-				
-				<attribute name="continued" type="boolean">
-					<annotation>
-						<documentation>
-							indicates whether the tag has been continued from the previous element
-						</documentation>
-					</annotation>
-				</attribute>
-			</extension>
-		</complexContent>
-	</complexType>
-	
 	<complexType name="LinkType">
 		<attribute name="ref" type="string" use="required">
 			<annotation>
