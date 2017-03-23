@@ -79,11 +79,22 @@
 				<element name="UnknownRegion" type="pc:UnknownRegionType">
 				</element>
 			</choice>
-
 		</sequence>
+		
 		<attribute name="imageFilename" type="string" use="required"/>
 		<attribute name="imageWidth" type="int" use="required"/>
 		<attribute name="imageHeight" type="int" use="required"/>
+		
+		<!-- New image operation attribues - 
+			specifies the affine transformation that was performed on the *original* to yield the image specified in the imageFilename attribue -->
+		<attribute name="imageRotation" type="int" use="optional" default="0"/>
+		<attribute name="imageTranslationX" type="float" use="optional" default="0"/>
+		<attribute name="imageTranslationY" type="float" use="optional" default="0"/>
+		<attribute name="imageScalingX" type="float" use="optional" default="0"/>
+		<attribute name="imageScalingY" type="float" use="optional" default="0"/>
+
+		
+		
 		<attribute name="custom" type="string">
 			<annotation>
 				<documentation>For generic use</documentation>
@@ -331,6 +342,9 @@ Range: -179.999,180</documentation>
 					</documentation>
 				</annotation>
 			</element>
+			<sequence>
+				<element name="Tag" type="pc:TagType" minOccurs="0" maxOccurs="unbounded"/>
+			</sequence>
 		</sequence>
 		<attribute name="conf">
             <annotation>
@@ -468,6 +482,155 @@ Range: -179.999,180</documentation>
 	<complexType name="TableRegionType">
 		<annotation>
 			<documentation>
+				The new table region type - a table is basically a collection of cells
+			</documentation>
+		</annotation>
+		<complexContent>
+			<extension base="pc:RegionType">
+				<sequence>
+					<element name="TableCell" type="pc:TableCellType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+				
+				<attribute name="orientation" type="float" use="optional">
+					<annotation>
+						<documentation>The angle the rectangle encapsulating a region has to be rotated in clockwise direction in order to correct the present skew (negative values indicate anti-clockwise rotation).
+Range: -179.999,180</documentation>
+					</annotation>
+				</attribute>
+				<attribute name="rows" type="int" use="optional">
+					<annotation>
+						<documentation>
+							The number of rows present in the table
+						</documentation>
+					</annotation>
+				</attribute>
+				<attribute name="columns" type="int" use="optional">
+					<annotation>
+						<documentation>
+							The number of columns present in the table
+						</documentation>
+					</annotation>
+				</attribute>
+				<attribute name="lineColour" type="pc:ColourSimpleType" use="optional">
+					<annotation>
+						<documentation>
+							The colour of the lines used in the region
+						</documentation>
+					</annotation>
+				</attribute>
+				<attribute name="bgColour" type="pc:ColourSimpleType" use="optional">
+					<annotation>
+						<documentation>
+							The background colour of the region
+						</documentation>
+					</annotation>
+				</attribute>
+				<attribute name="lineSeparators" type="boolean" use="optional">
+					<annotation>
+						<documentation>
+							Specifies the presence of line separators
+						</documentation>
+					</annotation>
+				</attribute>
+				<attribute name="embText" type="boolean" use="optional">
+					<annotation>
+						<documentation>
+							Specifies whether the region also contains
+							text
+						</documentation>
+					</annotation>
+				</attribute>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="TableCellType">
+		<annotation>
+			<documentation>A single cell of a table</documentation>
+		</annotation>	
+		
+		<complexContent>
+			<extension base="pc:TextRegionType">
+				<sequence>
+					<element name="CornerPts" type="pc:CornerPointsType" default="0 1 2 3"/>
+				</sequence>
+				
+				<attribute name="row" type="int" use="required">
+					<annotation><documentation>The row index of this cell</documentation></annotation>
+				</attribute>
+				<attribute name="col" type="int" use="required">
+					<annotation><documentation>The column index of this cell</documentation></annotation>
+				</attribute>
+				<attribute name="rowSpan" type="int" use="optional" default="1">
+					<annotation><documentation>The number of rows this cell spans</documentation></annotation>
+				</attribute>
+				<attribute name="colSpan" type="int" use="optional" default="1">
+					<annotation><documentation>The number of columns this cell spans</documentation></annotation>
+				</attribute>
+				
+				<attribute name="leftBorderVisible" type="boolean" use="optional" default="false">
+					<annotation><documentation>Left border visiblity</documentation></annotation>
+				</attribute>
+				
+				<attribute name="rightBorderVisible" type="boolean" use="optional" default="false">
+					<annotation><documentation>Right border visiblity</documentation></annotation>
+				</attribute>
+
+				<attribute name="topBorderVisible" type="boolean" use="optional" default="false">
+					<annotation><documentation>Top border visiblity</documentation></annotation>
+				</attribute>
+				
+				<attribute name="bottomBorderVisible" type="boolean" use="optional" default="false">
+					<annotation><documentation>Bottom border visiblity</documentation></annotation>
+				</attribute>
+
+				<attribute name="label" type="boolean" use="optional" default="false">
+					<annotation><documentation>Determines whether this cell is a label cell</documentation></annotation>
+				</attribute>
+				
+<!--				<attribute name="id" type="ID" use="required"/>-->
+				
+<!--				<attribute name="custom" type="string">
+					<annotation>
+						<documentation>For generic use</documentation>
+					</annotation>
+				</attribute>-->
+				
+<!--				<attribute name="comments" type="string"/>-->
+				
+			</extension>
+		</complexContent>
+		
+<!--		<sequence>
+			<element name="Coords" type="pc:CellCoordsType"/>
+			<element name="TextLine" type="pc:TextLineType" minOccurs="0" maxOccurs="unbounded"></element>
+		</sequence>
+		
+		<attribute name="row" type="int" use="required">
+			<annotation><documentation>The row index of this cell</documentation></annotation>
+		</attribute>
+		<attribute name="col" type="int" use="required">
+			<annotation><documentation>The column index of this cell</documentation></annotation>
+		</attribute>
+		<attribute name="rowSpan" type="int" use="optional" default="1">
+			<annotation><documentation>The number of rows this cell spans</documentation></annotation>
+		</attribute>
+		<attribute name="colSpan" type="int" use="optional" default="1">
+			<annotation><documentation>The number of columns this cell spans</documentation></annotation>
+		</attribute>
+		
+		<attribute name="id" type="ID" use="required"/>
+		<attribute name="custom" type="string">
+			<annotation>
+				<documentation>For generic use</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="comments" type="string"/>-->
+	</complexType>	
+	
+<!--	THE OLD TABLE REGION TYPE: -->
+	<!--<complexType name="TableRegionType">
+		<annotation>
+			<documentation>
 				Tabular data in any form is represented with a table
 				region. Rows and columns may or may not have separator
 				lines; these lines are not separator regions.
@@ -526,7 +689,8 @@ Range: -179.999,180</documentation>
 				</attribute>
 			</extension>
 		</complexContent>
-	</complexType>
+	</complexType>-->
+	
 	<complexType name="ChartRegionType">
 		<annotation>
 			<documentation>
@@ -1203,6 +1367,24 @@ It does not contain pagenumber (if not part of running title), marginals, signat
     		<pattern value="([0-9]+,[0-9]+ )+([0-9]+,[0-9]+)"/>
     	</restriction>
     </simpleType>
+	
+	<simpleType name="CornerPointsType">
+		<annotation>
+			<documentation>4 indexes (i.e. positive integer values) separated by whitespaces</documentation>
+		</annotation>
+		<restriction base="string">
+			<pattern value="[0-9]+ [0-9]+ [0-9]+ [0-9]+"/>
+		</restriction>
+	</simpleType>	
+	
+	<simpleType name="PointType">
+		<annotation>
+			<documentation>A single point"</documentation>
+		</annotation>
+		<restriction base="string">
+			<pattern value="([0-9]+,[0-9]+)"/>
+		</restriction>
+	</simpleType>
 
     <complexType name="RelationsType">
     	<annotation>
@@ -1382,7 +1564,6 @@ It does not contain pagenumber (if not part of running title), marginals, signat
     </simpleType>
 
 	<!-- Newly defined types: -->
-	
 	<complexType name="TagType">
 		<annotation>
 			<documentation>
@@ -1403,13 +1584,13 @@ It does not contain pagenumber (if not part of running title), marginals, signat
 			<element name="Property" type="pc:PropertyType"></element>
 		</sequence>
 		
-		<attribute name="id" type="ID" use="required">
+<!--		<attribute name="id" type="ID" use="required">
 			<annotation>
 				<documentation>
 					ID of this tag
 				</documentation>
 			</annotation>
-		</attribute>
+		</attribute>-->
 		
 		<attribute name="name"  type="pc:PropertyNameType" use="required">
 			<annotation>
@@ -1543,6 +1724,4 @@ It does not contain pagenumber (if not part of running title), marginals, signat
 			</annotation>
 		</attribute>
 	</complexType>
-    
-
 </schema>
